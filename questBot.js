@@ -730,6 +730,24 @@
        return true;
     }
 
+    function mvp(statistics) {
+        View.searchAllMessages().each(function() {
+            if (!$(this)[0].__seen_mvp) {
+                $(this)[0].__seen_mvp = true;
+
+                var m = $(this).text().match(/^Ты встретил (.*?)\..*?(\/fight_[\w\d]+)$/)
+                if (m) {
+                    View.executeCommand(m[2], true);
+
+                    if (statistics)
+                        statistics.update('MVP', m[1], new Date());
+                }
+            }
+       });
+
+       return true;
+    }
+
     function command(name, handler, statistics) {
         View.searchAllMessages().each(function() {
             if (!$(this)[0]['__seen_command_' + name]) {
@@ -955,6 +973,14 @@
             new Action('Антибот', function() { return antibot(stats); }, Timeout.generator(2, 1))
         ]);
 
+    var mvpScenario = new Scenario(
+        'MVP',
+        function(last, current) {
+            return 60 * 2 <= current.getDiffInSecs(last)
+        }, [
+            new Action('MVP', function() { return mvp(stats); }, Timeout.generator(2, 1))
+        ]);
+
     var handleStatsCommandScenario = new Scenario(
         'Команда /stats',
         function(last, current) {
@@ -992,6 +1018,7 @@
         [
             goScenario,
             antibotScenario,
+            mvpScenario,
             handleStatsCommandScenario,
         ],
         stats);
