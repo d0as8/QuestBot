@@ -735,7 +735,7 @@
             if (!$(this)[0].__seen_mvp) {
                 $(this)[0].__seen_mvp = true;
 
-                var m = $(this).text().match(/^Ты встретил (.*?)\..*?(\/fight_[\w\d]+)$/)
+                var m = $(this).text().match(/.*?Ты встретил (.*?)\..*?(\/fight_[\w\d]+)/)
                 if (m) {
                     View.executeCommand(m[2], true);
 
