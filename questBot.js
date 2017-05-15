@@ -762,7 +762,7 @@
         }, [
             new Action('Назад', View.clickGenerator(':arrow_left:Назад', true), Timeout.generator(2, 1)),
             new Action('Квесты', View.clickGenerator('🗺 Квесты'), Timeout.generator(2, 1)),
-            new Action('Лес', View.clickGenerator(':evergreen_tree:Лес'), Timeout.generator(300, 5)),
+            new Action('Лес', View.clickGenerator(':evergreen_tree:Лес'), Timeout.generator(420, 5)),
             new Action('Герой', View.clickGenerator('🏅Герой', true), Timeout.generator(2, 1))
         ]);
 
@@ -775,7 +775,7 @@
         }, [
             new Action('Назад', View.clickGenerator(':arrow_left:Назад', true), Timeout.generator(2, 1)),
             new Action('Квесты', View.clickGenerator('🗺 Квесты'), Timeout.generator(2, 1)),
-            new Action('Пещера', View.clickGenerator('🕸Пещера'), Timeout.generator(300, 5)),
+            new Action('Пещера', View.clickGenerator('🕸Пещера'), Timeout.generator(420, 5)),
             new Action('Герой', View.clickGenerator('🏅Герой', true), Timeout.generator(2, 1))
         ]);
 
@@ -788,7 +788,7 @@
         }, [
             new Action('Назад', View.clickGenerator(':arrow_left:Назад', true), Timeout.generator(2, 1)),
             new Action('Квесты', View.clickGenerator('🗺 Квесты'), Timeout.generator(2, 1)),
-            new Action('Караван', View.clickGenerator(':camel:ГРАБИТЬ КОРОВАНЫ'), Timeout.generator(300, 5)),
+            new Action('Караван', View.clickGenerator(':camel:ГРАБИТЬ КОРОВАНЫ'), Timeout.generator(420, 5)),
             new Action('Герой', View.clickGenerator('🏅Герой', true), Timeout.generator(2, 1))
         ]);
 
