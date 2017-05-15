@@ -722,7 +722,7 @@
                     View.clickControl(View.searchControl(name));
 
                     if (statistics)
-                        statistics.update('Antibot', '"' + m[2] + '" - "' + name + '"', new Date());
+                        statistics.update('Antibot', '\'' + m[2] + '\' - \'' + name + '\'', new Date());
                 }
             }
        });
