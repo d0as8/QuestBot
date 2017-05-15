@@ -4,7 +4,7 @@
 
 
 
-    var SCRIPT_NAME = 'QuestBot v2';
+    var SCRIPT_NAME = 'QuestBot v3';
 
 
 
@@ -139,6 +139,8 @@
             p2 = c;
         }
 
+        var p2l = p2.length;
+
         var m = 0;
         for (var i = 0; i < p1.length; i++) {
             for (var j = 0; j < p2.length; j++) {
@@ -151,11 +153,13 @@
             }
         }
 
-        m = (m / p1.length ).toFixed(3);
+        var p = (1 - p2.length / p2l).toFixed(3);
+        m = (m / p1.length).toFixed(3);
 
         Log.debug(100 * m + '%');
+        Log.debug(100 * p + '%');
 
-        return m;
+        return m * p;
     }
 
 
@@ -204,7 +208,9 @@
         black: "🇬🇵",
         yellow: "🇻🇦",
         red: "🇮🇲",
-        blue: "🇪🇺"
+        blue: "🇪🇺",
+        mint: "🇲🇴",
+        twilight: "🇰🇮"
     };
 
 
@@ -253,7 +259,7 @@
             }
         });
 
-        return 0.8 < max
+        return 0.7 < max
             ? control
             : false;
     };
@@ -526,15 +532,10 @@
         }
 
         if (View.controlPanelIsVisible()) {
-            //Log.info('VISIBLE');
+            if (View.searchControl('🏅Герой')) return true;
 
-            if (View.searchControl('Герой')) return true;
-
-            //Log.info('NO HERO');
             var controls = View.searchAllControls();
-            //Log.info('CONTROLS', controls.length, controls);
             if (-1 != [3, 6].indexOf(controls.length)) {
-                //Log.info('PROCESS');
 
                 var group = 6 == controls.length ? 'first step' : 'second step';
                 var gain = Tools.selectAny(controls);
@@ -554,7 +555,7 @@
     function castle(flag, statistics) {
         if (!View.controlPanelIsVisible()) return false;
 
-        if (View.searchControl('Герой')) return true;
+        if (View.searchControl('🏅Герой')) return true;
 
         var controls = View.searchAllControls();
         if (controls.length) {
@@ -571,11 +572,11 @@
                 }
             }
 
-            if (0.8 < max) {
+            if (0.7 < max) {
                 View.clickControl(control);
 
                 if (statistics)
-                    statistics.update('Castle', control.text(), new Date());
+                    statistics.update('Castles', control.text(), new Date());
             }
 
         }
@@ -587,7 +588,7 @@
     function stock(statistics) {
         if (!View.controlPanelIsVisible()) return false;
 
-        if (View.searchControl('Герой')) return true;
+        if (View.searchControl('🏅Герой')) return true;
 
         var controls = View.searchAllControls();
         if (controls.length) {
@@ -614,7 +615,7 @@
                     View.executeCommand('/go', true);
 
                     if (statistics)
-                        statistics.update('GO', m[1], new Date());
+                        statistics.update('Bandits', m[1], new Date());
                 }
             }
        });
@@ -622,7 +623,104 @@
        return true;
     }
 
+    function Antibot() {}
+    Antibot.pictas = {
+        'cat': ':cat2:',
+        'dog': ':dog2:',
+        'horse': ':racehorse:',
+        'goat': ':goat:',
+        'bun': '🐿',
+        'pig': ':pig2:',
+        'eggplant&carrot': ':eggplant:🥕',
+        'melon&cherry': ':watermelon::cherries:',
+        'pizza': ':pizza:',
+        'cheeze': '🧀',
+        'cheeze&bread': ':bread:🧀',
+        'hotdog': '🌭',
+    };
+    Antibot.origins = {
+        'арабским скакуном': 'horse',
+        'арбуз с вишенкой': 'melon&cherry',
+        'баклажан с морковкой': 'eggplant&carrot',
+        'белочкой-вредителем': 'bun',
+        'бурундуком': 'bun',
+        'взбесившемся кобелем': 'dog',
+        'генератором козьего молока': 'goat',
+        'дольку арбуза да вишню': 'melon&cherry',
+        'когтистой фермерской кошечкой': 'cat',
+        'козочкой': 'goat',
+        'котенькой': 'cat',
+        'котейкой': 'cat',
+        'котягой': 'cat',
+        'кошкой': 'cat',
+        'кусок пиццы': 'pizza',
+        'кусок сыра': 'cheeze',
+        'мерзким свиносалогенератором': 'pig',
+        'наглым бельчонком': 'bun',
+        'немного сыра и хлеб': 'cheeze&bread',
+        'непокорной кобылой': 'horse',
+        'огроменным котищей': 'cat',
+        'обнаглевшим котищей': 'cat',
+        'песьим отродьем': 'dog',
+        'пиццу': 'pizza',
+        'псиной': 'dog',
+        'свинкой': 'pig',
+        'собакой': 'dog',
+        'сосиску в тесте': 'hotdog',
+        'сыр': 'cheeze',
+        'сыр и хлеб': 'cheeze&bread',
+        'сыр да хлеб': 'cheeze&bread',
+        'фермерским хрюндилем': 'pig',
+        'хлеб с сыром': 'cheeze&bread',
+        'хотдог': 'hotdog',
+        'швейцарский сыр': 'cheeze',
+    };
+    Antibot.findPictas = function(key) {
+        var origin = '';
+        var max = 0;
 
+        for (var i in Antibot.origins) {
+            var c = Tools.cmp(key, i);
+            if (c > max) {
+                max = c;
+                origin = i;
+            }
+        }
+
+        return Antibot.pictas[Antibot.origins[origin]];
+    };
+
+    function antibot(statistics) {
+        View.searchAllMessages().each(function() {
+            if (!$(this)[0].__seen_antibot) {
+                $(this)[0].__seen_antibot = true;
+
+                var m = $(this).text().match(/^На выходе из замка.*?(Ты-то помнишь,|Ты помогал фермеру, гоняясь за) (.*?)[\.,]/)
+                if (m) {
+                    var name = Antibot.findPictas(m[2]);
+                    View.clickControl(View.searchControl(name));
+
+                    if (statistics)
+                        statistics.update('Antibot', '"' + m[2] + '" - "' + name + '"', new Date());
+                }
+            }
+       });
+
+       return true;
+    }
+
+    function command(name, handler, statistics) {
+        View.searchAllMessages().each(function() {
+            if (!$(this)[0]['__seen_command_' + name]) {
+                $(this)[0]['__seen_command_' + name] = true;
+
+                if ($(this).text().match(name))
+                    handler()
+            }
+       });
+
+       return true;
+    }
 
 
 
@@ -641,10 +739,10 @@
                 ChatWars.isDay(current) &&
                 !ChatWars.isBattleTime(current);
         }, [
-            new Action('Назад', View.clickGenerator('Назад', true), Timeout.generator(2, 1)),
-            new Action('Квесты', View.clickGenerator('Квесты'), Timeout.generator(2, 1)),
-            new Action('Лес', View.clickGenerator('Лес'), Timeout.generator(300, 5)),
-            new Action('Герой', View.clickGenerator('Герой', true), Timeout.generator(2, 1))
+            new Action('Назад', View.clickGenerator(':arrow_left:Назад', true), Timeout.generator(2, 1)),
+            new Action('Квесты', View.clickGenerator('🗺 Квесты'), Timeout.generator(2, 1)),
+            new Action('Лес', View.clickGenerator(':evergreen_tree:Лес'), Timeout.generator(300, 5)),
+            new Action('Герой', View.clickGenerator('🏅Герой', true), Timeout.generator(2, 1))
         ]);
 
     var caveScenario = new Scenario(
@@ -654,10 +752,10 @@
                 !ChatWars.isBattleTime(current) &&
                 !ChatWars.isDay(current);
         }, [
-            new Action('Назад', View.clickGenerator('Назад', true), Timeout.generator(2, 1)),
-            new Action('Квесты', View.clickGenerator('Квесты'), Timeout.generator(2, 1)),
-            new Action('Пещера', View.clickGenerator('Пещера'), Timeout.generator(300, 5)),
-            new Action('Герой', View.clickGenerator('Герой', true), Timeout.generator(2, 1))
+            new Action('Назад', View.clickGenerator(':arrow_left:Назад', true), Timeout.generator(2, 1)),
+            new Action('Квесты', View.clickGenerator('🗺 Квесты'), Timeout.generator(2, 1)),
+            new Action('Пещера', View.clickGenerator('🕸Пещера'), Timeout.generator(300, 5)),
+            new Action('Герой', View.clickGenerator('🏅Герой', true), Timeout.generator(2, 1))
         ]);
 
     var caravanScenario = new Scenario(
@@ -667,10 +765,10 @@
                 !ChatWars.isBattleTime(current) &&
                 !ChatWars.isDay(current);
         }, [
-            new Action('Назад', View.clickGenerator('Назад', true), Timeout.generator(2, 1)),
-            new Action('Квесты', View.clickGenerator('Квесты'), Timeout.generator(2, 1)),
-            new Action('Караван', View.clickGenerator('КОРОВАН'), Timeout.generator(300, 5)),
-            new Action('Герой', View.clickGenerator('Герой', true), Timeout.generator(2, 1))
+            new Action('Назад', View.clickGenerator(':arrow_left:Назад', true), Timeout.generator(2, 1)),
+            new Action('Квесты', View.clickGenerator('🗺 Квесты'), Timeout.generator(2, 1)),
+            new Action('Караван', View.clickGenerator(':camel:ГРАБИТЬ КОРОВАНЫ'), Timeout.generator(300, 5)),
+            new Action('Герой', View.clickGenerator('🏅Герой', true), Timeout.generator(2, 1))
         ]);
 
     var arenaScenario = new Scenario(
@@ -681,12 +779,14 @@
                 !ChatWars.isBattleTime(current) &&
                 !ChatWars.isArenaStopTime(current);
         }, [
-            new Action('Назад', View.clickGenerator('Назад', true), Timeout.generator(2, 1)),
-            new Action('Замок', View.clickGenerator('Замок'), Timeout.generator(2, 1)),
-            new Action('Арена', View.clickGenerator('Арена'), Timeout.generator(2, 1)),
-            new Action('Поиск соперника', View.clickGenerator('Поиск соперника'), Timeout.generator(2, 1)),
+            new Action('Назад', View.clickGenerator(':arrow_left:Назад', true), Timeout.generator(2, 1)),
+            //new Action('Меч', View.executeCommandGenerator('/on_103', true), Timeout.generator(2, 1)),
+            new Action('Замок', View.clickGenerator(':european_castle:Замок'), Timeout.generator(2, 1)),
+            new Action('Арена', View.clickGenerator(':postal_horn:Арена'), Timeout.generator(2, 1)),
+            new Action('Поиск соперника', View.clickGenerator(':mag_right:Поиск соперника'), Timeout.generator(2, 1)),
             new Action('Бой', function() { return battle(stats); }, Timeout.generator(7, 1)),
-            new Action('Герой', View.clickGenerator('Герой', true), Timeout.generator(2, 1))
+            //new Action('Кирка', View.executeCommandGenerator('/on_119', true), Timeout.generator(2, 1)),
+            new Action('Герой', View.clickGenerator('🏅Герой', true), Timeout.generator(2, 1))
         ]);
 
     var defenceScenario = new Scenario(
@@ -699,8 +799,8 @@
                 -1 != ChatWars.battleHours.indexOf(hour) &&
                 min >= ChatWars.safeMinutes[1];
         }, [
-            new Action('Назад', View.clickGenerator('Назад', true), Timeout.generator(2, 1)),
-            new Action('Защита', View.clickGenerator('Защита'), Timeout.generator(2, 1)),
+            new Action('Назад', View.clickGenerator(':arrow_left:Назад', true), Timeout.generator(2, 1)),
+            new Action('Защита', View.clickGenerator('🛡 Защита'), Timeout.generator(2, 1)),
             new Action('Замок', function() { return castle('white', stats); }, Timeout.generator(2, 1)),
         ]);
 
@@ -726,7 +826,7 @@
         }, [
             new Action('Склад', View.executeCommandGenerator('/stock', true), Timeout.generator(2, 1)),
             new Action('Полка', function() { return stock(stats); }, Timeout.generator(2, 1)),
-            new Action('Назад', View.clickGenerator('Назад', true), Timeout.generator(2, 1))
+            new Action('Назад', View.clickGenerator(':arrow_left:Назад', true), Timeout.generator(2, 1))
         ]);
 
     var bonesScenario = new Scenario(
@@ -737,10 +837,10 @@
                 ChatWars.isPubTime(current) &&
                 ChatWars.isDay(current);
         }, [
-            new Action('Назад', View.clickGenerator('Назад', true), Timeout.generator(2, 1)),
-            new Action('Замок', View.clickGenerator('Замок'), Timeout.generator(2, 1)),
-            new Action('Таверна', View.clickGenerator('Таверна'), Timeout.generator(2, 1)),
-            new Action('Кости', View.clickGenerator('кости'), Timeout.generator(300, 5)),
+            new Action('Назад', View.clickGenerator(':arrow_left:Назад', true), Timeout.generator(2, 1)),
+            new Action('Замок', View.clickGenerator(':european_castle:Замок'), Timeout.generator(2, 1)),
+            new Action('Таверна', View.clickGenerator(':beer:Таверна', true), Timeout.generator(2, 1)),
+            new Action('Кости', View.clickGenerator(':game_die:Играть в кости', true), Timeout.generator(300, 5)),
         ]);
 
     var cupScenario = new Scenario(
@@ -751,10 +851,10 @@
                 ChatWars.isPubTime(current) &&
                 ChatWars.isDay(current);
         }, [
-            new Action('Назад', View.clickGenerator('Назад', true), Timeout.generator(2, 1)),
-            new Action('Замок', View.clickGenerator('Замок'), Timeout.generator(2, 1)),
-            new Action('Таверна', View.clickGenerator('Таверна'), Timeout.generator(2, 1)),
-            new Action('Кружка', View.clickGenerator('кружку'), Timeout.generator(300, 5)),
+            new Action('Назад', View.clickGenerator(':arrow_left:Назад', true), Timeout.generator(2, 1)),
+            new Action('Замок', View.clickGenerator(':european_castle:Замок'), Timeout.generator(2, 1)),
+            new Action('Таверна', View.clickGenerator(':beer:Таверна', true), Timeout.generator(2, 1)),
+            new Action('Кружка', View.clickGenerator(':beer:Взять кружку эля', true), Timeout.generator(300, 5)),
         ]);
 
     var heroScenario = new Scenario(
@@ -763,65 +863,91 @@
             return Timeout.generator(60 * 45, 0.25)() <= current.getDiffInSecs(last) &&
                 ChatWars.isDay(current)
         }, [
-            new Action('Назад', View.clickGenerator('Назад', true), Timeout.generator(2, 1)),
-            new Action('Герой', View.clickGenerator('Герой', true), Timeout.generator(2, 1)),
+            new Action('Назад', View.clickGenerator(':arrow_left:Назад', true), Timeout.generator(2, 1)),
+            new Action('Герой', View.clickGenerator('🏅Герой', true), Timeout.generator(2, 1)),
         ]);
 
     var petScenario = new Scenario(
         'Питомец',
         function(last, current) {
-            return Timeout.generator(60 * 60 * 1.5, 1)() <= current.getDiffInSecs(last)
+            return Timeout.generator(60 * 60 * 1.5, 1)() <= current.getDiffInSecs(last) &&
+                !ChatWars.isBattleTime(current)
         }, [
-            new Action('Назад', View.clickGenerator('Назад', true), Timeout.generator(2, 1)),
+            new Action('Назад', View.clickGenerator(':arrow_left:Назад', true), Timeout.generator(2, 1)),
             new Action('Питомец', View.executeCommandGenerator('/pet'), Timeout.generator(5, 1)),
-            new Action('Назад', View.clickGenerator('Назад'), Timeout.generator(2, 1)),
+            new Action('Назад', View.clickGenerator(':arrow_left:Назад'), Timeout.generator(2, 1)),
         ]);
 
     var petFeedScenario = new Scenario(
         'Покормить питомца',
         function(last, current) {
-            return Timeout.generator(60 * 60 * 6, 20)() <= current.getDiffInSecs(last)
+            return Timeout.generator(60 * 60 * 6, 20)() <= current.getDiffInSecs(last) &&
+                !ChatWars.isBattleTime(current)
         }, [
-            new Action('Назад', View.clickGenerator('Назад', true), Timeout.generator(2, 1)),
+            new Action('Назад', View.clickGenerator(':arrow_left:Назад', true), Timeout.generator(2, 1)),
             new Action('Питомец', View.executeCommandGenerator('/pet'), Timeout.generator(2, 1)),
-            new Action('Покормить', View.clickGenerator('Покормить'), Timeout.generator(2, 1)),
+            new Action('Покормить', View.clickGenerator(':baby_bottle:Покормить'), Timeout.generator(2, 1)),
             new Action('Питомец', View.executeCommandGenerator('/pet', true), Timeout.generator(2, 1)),
-            new Action('Назад', View.clickGenerator('Назад'), Timeout.generator(2, 1)),
+            new Action('Назад', View.clickGenerator(':arrow_left:Назад'), Timeout.generator(2, 1)),
         ]);
 
     var petPlayScenario = new Scenario(
         'Поиграть с питомцем',
         function(last, current) {
-            return Timeout.generator(60 * 60 * 3, 20)() <= current.getDiffInSecs(last)
+            return Timeout.generator(60 * 60 * 3, 20)() <= current.getDiffInSecs(last) &&
+                !ChatWars.isBattleTime(current)
         }, [
-            new Action('Назад', View.clickGenerator('Назад', true), Timeout.generator(2, 1)),
+            new Action('Назад', View.clickGenerator(':arrow_left:Назад', true), Timeout.generator(2, 1)),
             new Action('Питомец', View.executeCommandGenerator('/pet'), Timeout.generator(2, 1)),
-            new Action('Поиграть', View.clickGenerator('Поиграть'), Timeout.generator(2, 1)),
-            new Action('Назад', View.clickGenerator('Назад'), Timeout.generator(2, 1)),
+            new Action('Поиграть', View.clickGenerator(':soccer:Поиграть'), Timeout.generator(2, 1)),
+            new Action('Назад', View.clickGenerator(':arrow_left:Назад'), Timeout.generator(2, 1)),
         ]);
 
     var petCleanScenario = new Scenario(
         'Почистить питомца',
         function(last, current) {
-            return Timeout.generator(60 * 60 * 3, 20)() <= current.getDiffInSecs(last)
+            return Timeout.generator(60 * 60 * 3, 20)() <= current.getDiffInSecs(last) &&
+                !ChatWars.isBattleTime(current)
         }, [
-            new Action('Назад', View.clickGenerator('Назад', true), Timeout.generator(2, 1)),
+            new Action('Назад', View.clickGenerator(':arrow_left:Назад', true), Timeout.generator(2, 1)),
             new Action('Питомец', View.executeCommandGenerator('/pet'), Timeout.generator(2, 1)),
-            new Action('Почистить', View.clickGenerator('Почистить'), Timeout.generator(2, 1)),
-            new Action('Назад', View.clickGenerator('Назад'), Timeout.generator(2, 1)),
+            new Action('Почистить', View.clickGenerator(':bathtub:Почистить'), Timeout.generator(2, 1)),
+            new Action('Назад', View.clickGenerator(':arrow_left:Назад'), Timeout.generator(2, 1)),
         ]);
+
+
+
 
     var goScenario = new Scenario(
         'Защита каравана',
         function(last, current) {
             return 60 * 2 <= current.getDiffInSecs(last)
         }, [
-            new Action('/go', function() { return go(stats); }, Timeout.generator(2, 1))
+            new Action('Защита каравана', function() { return go(stats); }, Timeout.generator(2, 1))
         ]);
+
+    var antibotScenario = new Scenario(
+        'Антибот',
+        function(last, current) {
+            return 60 * 2 <= current.getDiffInSecs(last)
+        }, [
+            new Action('Антибот', function() { return antibot(stats); }, Timeout.generator(2, 1))
+        ]);
+
+    var handleStatsCommandScenario = new Scenario(
+        'Команда /stats',
+        function(last, current) {
+            return 60 * 1 <= current.getDiffInSecs(last)
+        }, [
+            new Action('Команда /stats', function() { return command('/stats', function () { Log.info(stats.get()); }, stats); }, Timeout.generator(2, 1))
+        ]);
+
+
+
 
     Log.info('Start');
 
-    var app = new Application(
+    var appOutput = new Application(
         [
             statsScenario,
             forestScenario,
@@ -838,10 +964,18 @@
             petFeedScenario,
             petPlayScenario,
             petCleanScenario,
-            goScenario,
         ],
         stats);
 
-    Application.asyncRun(app, 1000, 5000);
+    var appInput = new Application(
+        [
+            goScenario,
+            antibotScenario,
+            handleStatsCommandScenario,
+        ],
+        stats);
+
+    Application.asyncRun(appOutput, 1000, 5000);
+    Application.asyncRun(appInput,  1000, 5000);
 
 })();
