@@ -661,6 +661,7 @@
         'козочкой': 'goat',
         'козлом': 'goat',
         'козленком': 'goat',
+        'козленком соседа': 'goat',
         'котенькой': 'cat',
         'котейкой': 'cat',
         'котягой': 'cat',
@@ -761,18 +762,45 @@
        return true;
     }
 
-    function command(name, handler, statistics) {
+    function command(name, pattern, handler, statistics) {
         View.searchAllMessages().each(function() {
             if (!$(this)[0]['__seen_command_' + name]) {
                 $(this)[0]['__seen_command_' + name] = true;
 
-                if ($(this).text().match(name))
-                    handler()
+                var m = $(this).text().match(pattern);
+                if (m)
+                    handler(m[0]);
             }
        });
 
        return true;
     }
+
+
+    function Building() {
+        this.task = '';
+    }
+
+    Building.formTask = function(task) {
+        return task.replace('//', '/');
+    };
+
+    Building.prototype.createTask = function(task) {
+        this.task = task;
+    };
+
+    Building.prototype.removeTask = function() {
+        this.task = '';
+    };
+
+    Building.prototype.hasTask = function() {
+        return !!this.task;
+    };
+
+    Building.prototype.getTask = function() {
+        return this.task;
+    };
+
 
 
 
@@ -967,6 +995,17 @@
             new Action('Назад', View.clickGenerator(':arrow_left:Назад'), Timeout.generator(2, 1)),
         ]);
 
+    var buildingState = new Building();
+
+    var buildScenario = new Scenario(
+        'Строительство',
+        function(last, current) {
+            return Timeout.generator(60 * 5, 1)() <= current.getDiffInSecs(last) &&
+                !ChatWars.isBattleTime(current) &&
+                buildingState.hasTask()
+        }, [
+            new Action('Строительство', function () { return View.executeCommand(buildingState.getTask()); }, Timeout.generator(300, 5)),
+        ]);
 
 
 
@@ -999,7 +1038,45 @@
         function(last, current) {
             return 60 * 1 <= current.getDiffInSecs(last)
         }, [
-            new Action('Команда /stats', function() { return command('/stats', function () { Log.info(stats.get()); }, stats); }, Timeout.generator(2, 1))
+            new Action('Команда /stats',
+                function() {
+                    return command(
+                        'stats',
+                        /\/stats/,
+                        function () {
+                            Log.info(stats.get());
+                            Log.info('Building: ', buildingState.getTask());
+                        },
+                        stats);
+                },
+                Timeout.generator(2, 1))
+        ]);
+
+    var handleBuildCommandScenario = new Scenario(
+        'Команда /build',
+        function(last, current) {
+            return 60 * 1 <= current.getDiffInSecs(last)
+        }, [
+            new Action('Команда /build',
+                function() {
+                    return command(
+                        'build_repair',
+                        /\/\/(build|repair)_[\w\d]+/,
+                        function (command) {
+                            command = Building.formTask(command);
+                            if (buildingState.getTask() === command) {
+                                buildingState.removeTask();
+
+                                Log.info('Delete task for building');
+                            } else {
+                                buildingState.createTask(command);
+
+                                Log.info('Add task for building: "' + command + '"');
+                            }
+                        },
+                        stats);
+                },
+                Timeout.generator(2, 1))
         ]);
 
 
@@ -1024,6 +1101,7 @@
             petFeedScenario,
             petPlayScenario,
             petCleanScenario,
+            buildScenario,
         ],
         stats);
 
@@ -1033,6 +1111,7 @@
             antibotScenario,
             mvpScenario,
             handleStatsCommandScenario,
+            handleBuildCommandScenario,
         ],
         stats);
 
